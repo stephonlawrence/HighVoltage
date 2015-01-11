@@ -1,5 +1,7 @@
 #include "rapidjson/document.h"
-#include "rapidjson/filewritestream.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include <fstream>
 #include <iostream>
 #include <cstdio>
 
@@ -8,12 +10,22 @@ using namespace std;
 
 int main() {
     
-
-    const char json[] = "[1, 2, 3, 4]";
-
+    ofstream fs;
+    fs.open("test.json");
+    const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
     Document d;
     d.Parse(json);
-    FILE* fp = fopen("test.json", "wb");
+
+    Value& s = d["stars"];
+    s.SetInt(s.GetInt() + 1);
+
+    StringBuffer buffer;
+    Writer<StringBuffer> writer(buffer);
+    d.Accept(writer);
+
+    fs << buffer.GetString();
+    cout << buffer.GetString() << endl;
+
     int choice = 1;
     while(choice > 0){
         cout << endl << "end of program: " << endl;
