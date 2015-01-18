@@ -1,15 +1,20 @@
 $(document).ready(function(){
-	$.get( "test.json", function( data ) {
-	  console.log(data.project);
-	  $(".dataholder").append("<p>"+data.project+"+"+data.stars+"</p>");
-	  // var items = [];
-	  // $.each( data, function( key, val ) {
-	  //   items.push( "<li id='" + key + "'>" + val + "</li>" );
-	  // });
-	 
-	  // $( "<ul/>", {
-	  //   "class": "my-new-list",
-	  //   html: items.join( "" )
-	  // }).appendTo( "body" );
+	var i; 
+	function starti(){
+		i = setInterval(function(){
+			$.get( "test.json", function( data ) {
+				var d = JSON.parse(data);
+				$(".dataholder").html("<p>"+d.project+"+"+d.stars+"</p>");
+			});
+		}, 1000/60);
+	}
+	function stopi(){
+		clearInterval(i);
+	}
+	$('.start').on('click', function(){
+		starti();
+	});
+	$('.stop').on('click', function(){
+		stopi();
 	});
 });
