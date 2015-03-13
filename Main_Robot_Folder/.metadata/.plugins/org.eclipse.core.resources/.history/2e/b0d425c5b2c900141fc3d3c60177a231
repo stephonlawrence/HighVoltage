@@ -586,12 +586,6 @@ public class Robot extends IterativeRobot {
 	double negMax = 0;
 	
 	
-	public void pull(double val){
-		double neg = val * -1;
-		holder1.set(val);
-		holder2.set(neg);
-	}
-	
     @SuppressWarnings("deprecation")
 	public void teleopPeriodic() {
     	double lidist = li.getDistance();
@@ -675,14 +669,15 @@ public class Robot extends IterativeRobot {
     	}else{
     		holder.set(DoubleSolenoid.Value.kReverse);
     	}
-    	
-    	
     	if(joy1.getRawButton(7)){
-    		pull(1);
+    		holder1.set(1.0);
+    		holder2.set(-1.0);
     	}else if(joy1.getRawButton(8)){
-    		pull(-1);
+    		holder1.set(-1.0);
+    		holder2.set(1.0);
     	}else{
-    		pull(0);
+    		holder1.set(0);
+    		holder2.set(0);
     	}
     	
     	/* ---
