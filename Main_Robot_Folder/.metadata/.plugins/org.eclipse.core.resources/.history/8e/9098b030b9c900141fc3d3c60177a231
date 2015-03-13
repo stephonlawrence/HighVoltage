@@ -1,0 +1,790 @@
+
+package org.usfirst.frc.team369.robot;
+
+//import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.I2C.Port;
+import edu.wpi.first.wpilibj.interfaces.Potentiometer;
+import edu.wpi.first.wpilibj.networktables.NetworkTable;
+
+//--import org.json.*;
+
+import java.io.File;
+
+/**
+ * The VM is configured to automatically run this class, and to call the
+ * functions corresponding to each mode, as described in the IterativeRobot
+ * documentation. If you change the name of this class or the package after
+ * creating this project, you must also update the manifest file in the resource
+ * directory.
+ */
+public class Robot extends IterativeRobot {
+    /**
+     * This function is run when the robot is first started up and should be
+     * used for any initialization code.
+     */
+	Talon driveFrontLeft;
+	Talon driveFrontRight;
+	Talon driveBackLeft;
+	Talon driveBackRight;
+	
+	Talon strafe1;
+	Talon strafe2;
+	Talon Elevator;
+	Talon Carriage;
+	Talon Extra1;
+	
+	Talon holder1;
+	Talon holder2;
+	
+	DoubleSolenoid holder;
+	
+	//Servo s1;
+	//Servo s2;
+	//Carriage is first level
+	//Elevator is second level
+	AnalogPotentiometer elPot;
+	//load all motors into list
+	static int MotorAmount = 10;
+	Talon Motors[] = new Talon[MotorAmount];
+	BuiltInAccelerometer AC;
+	RobotDrive robot;
+	Joystick joy1;
+	Joystick joy2;
+	Gyro gg;
+	DriverStation ds;
+	NetworkTable sensortable;
+	RobotDrive frontRobot;
+	RobotDrive rearRobot;
+	
+	//SmartDashboard sd;.
+	//static JSONObject obj = new JSONObject("{\"cool\":\"beans\"}");
+	//static String pageName = obj.getString("cool");
+	
+	//--JSONObject jobjs;
+	//--JSONArray jsensors;
+	
+	DigitalInput AutBut1;
+	DigitalInput Limit1;
+	
+	Compressor c;
+	
+	DoubleSolenoid armOpen;
+	DigitalInput exampleCounterHi;
+	LIDAR li;
+	
+	//Counter exampleCounterLow = new Counter(3);
+	
+    public void robotInit() {
+    	li = new LIDAR(Port.kMXP);
+    	//--jobjs = new JSONObject("{\"sensors\":[{\"name\":\"Potentiometer\", \"type\":\"double\", \"value\":0}]}");
+    	
+    	//--jsensors = jobjs.getJSONArray("sensors");
+    	
+    	//--jsensors.put(new JSONObject().put("name", "gyro").put("type", "double").put("value", "0"));
+    	//--jsensors.put(new JSONObject().put("name", "encv1").put("type", "double").put("value", "0"));
+    	//--jsensors.put(new JSONObject().put("name", "AccelX").put("type", "double").put("value", "0"));
+    	//--jsensors.put(new JSONObject().put("name", "AccelY").put("type", "double").put("value", "0"));
+    	
+    	Motors[0] = new Talon(0);
+    	Motors[1] = new Talon(1);
+    	Motors[2] = new Talon(2);
+    	Motors[3] = new Talon(3);
+    	Motors[4] = new Talon(4);
+    	Motors[5] = new Talon(5);
+    	Motors[6] = new Talon(6);
+    	Motors[7] = new Talon(7);
+    	Motors[8] = new Talon(8);
+    	Motors[9] = new Talon(9);
+    	driveFrontLeft = Motors[8];
+    	driveBackLeft = Motors[2];
+    	
+    	holder1 = Motors[6];
+    	holder2 = Motors[7];
+    	c = new Compressor();
+    	c.setClosedLoopControl(true);
+    	exampleCounterHi = new DigitalInput(2);
+    	//exampleCounterHi.setSemiPeriodMode(true);
+    	
+    	//exampleCounterLow.setSemiPeriodMode(false);
+    	
+    	
+    	armOpen = new DoubleSolenoid(0,1);
+    	
+    	holder = new DoubleSolenoid(3,4);
+    	//arm1 = new Solenoid(0);
+    	//arm2 = new Solenoid(1);
+    	driveFrontRight = Motors[9];
+    	driveBackRight = Motors[1];
+    	//s1 = new Servo(6);
+    	//s2 = new Servo(7);
+//    	
+    	
+    	AutBut1 = new DigitalInput(0);
+    	Limit1 = new DigitalInput(1);
+//    	driveLeft = Motors[1];
+//    	driveRight = Motors[2];
+    	//strafe1 = Motors[8];
+    	//strafe2 = Motors[9];
+    	Elevator = Motors[4];
+    	Carriage = Motors[5];
+    	//Extra1 = Motors[5];
+    	//robot = new RobotDrive(driveLeft, driveRight);
+    	//robot = new RobotDrive(driveFrontLeft, driveBackLeft, driveFrontRight, driveBackRight);
+    	//robot.setInvertedMotor(RobotDrive.MotorType.kFrontLeft, true);
+    	//robot.setInvertedMotor(RobotDrive.MotorType.kRearLeft, true);
+    	
+    	frontRobot = new RobotDrive(driveFrontLeft, driveFrontRight);
+    	rearRobot = new RobotDrive(driveBackLeft, driveBackRight);
+    	
+    	
+    	joy1 = new Joystick(0);
+    	joy2 = new Joystick(1);
+    	gg = new Gyro(0);
+    	elPot = new AnalogPotentiometer(1);
+    	AC = new BuiltInAccelerometer();
+    	sensortable = NetworkTable.getTable("JtoJData");
+    	//sd.putString("cool", pageName);
+    }
+
+    public void SetTest(int joyNum, int MotorNum){
+    	if(joyNum > 0 && MotorNum >= 0 && MotorNum < MotorAmount){
+	    	if(joy1.getRawButton(joyNum)){
+	    		//joy1.getRawAxis(5);
+	    		Motors[MotorNum].set(joy1.getRawAxis(5)/*joy1.getZ()*//*joy1.getY()*/);
+	    	}else{
+	    		for(int k=0; k< MotorAmount; k++){
+	    			Motors[k].set(0);
+	    		}
+	    	}
+    	}
+    }
+    public int current = -1;
+    
+    /**
+     * This function is called periodically during autonomous
+     */
+    
+    public void drive(double speed){
+    	//frontRobot.tankDrive(speed, speed);
+    	//rearRobot.tankDrive(speed, speed);
+    	
+    	double angle = gg.getAngle();
+    	double slower = speed-(speed*0.1);
+    	if(angle < -20){
+	    	frontRobot.tankDrive(speed, slower);
+	    	rearRobot.tankDrive(speed, slower);
+    	}else if(angle > 20){
+    		frontRobot.tankDrive(slower, speed);
+	    	rearRobot.tankDrive(slower, speed);
+    	}else{
+    		frontRobot.tankDrive(speed, speed);
+	    	rearRobot.tankDrive(speed, speed);
+    	}
+    	//System.out.println("DRIVING");
+    }
+    
+    public boolean regDrive(double desigredangle , double angle){
+    	double speed = 0.5;
+    	boolean eturned = false;
+    	if(angle < desigredangle - 10){
+	    	frontRobot.tankDrive(speed, -1*speed);
+	    	rearRobot.tankDrive(speed, -1*speed);
+    	}else if(angle > desigredangle + 10){
+    		frontRobot.tankDrive(-1*speed, speed);
+	    	rearRobot.tankDrive(-1*speed, speed);
+    	}else{
+    		stop();
+    		eturned = true;
+    	}
+    	return eturned;
+    }
+    
+    public void stop(){
+    	frontRobot.tankDrive(0, 0);
+    	rearRobot.tankDrive(0, 0);
+    	//System.out.println("STOPPING");
+    }
+    
+    public void elevator(double speed){
+		double potVal = elPot.get();
+    	double elv = speed;
+    	//elv *= -1;
+    	if(elv < -0.5){
+    		elv = -0.5;
+    	}
+    	if(speed != 0){
+    		if(potVal > 0.053 && Limit1.get()){
+    			//nothing is touching
+    			Elevator.set(elv);
+    			Carriage.set(elv);
+    		}else if(elv < 0 && potVal < 0.053){
+    			Elevator.set(elv);
+    			Carriage.set(elv);
+    		}else if(!Limit1.get() && elv > 0){
+    			//if touching and moving up
+    			Elevator.set(elv);
+    			Carriage.set(elv);
+    		}else{
+    			Elevator.set(0);
+    			Carriage.set(0);
+    		}
+    	}else{
+    		Elevator.set(0);
+			Carriage.set(0);
+    	}
+    	//System.out.println("ELEVATOR: "+elv);
+	}
+	
+	public void openArms(){
+		armOpen.set(DoubleSolenoid.Value.kReverse);
+		//System.out.println("OPENING ARMS");
+	}
+	@Override
+	public void disabledInit() {
+		// TODO Auto-generated method stub
+		super.disabledInit();
+		li.stop();
+	}
+	public void closeArms(){
+		armOpen.set(DoubleSolenoid.Value.kForward);
+		//System.out.println("CLOSING ARMS");
+	}
+    public int AutoCounter;
+    public boolean caught;
+    public int storedTime;
+    public int storedTime2;
+    boolean turned;
+    boolean listart;
+    public void autoOneToteDrive(int time){
+    	double lidist;
+    	
+    	if(time == 0){
+    		listart = true;
+    		caught = false;
+    		storedTime = time;
+    		storedTime2 = time;
+    		turned = false;
+    		openArms();
+    	}
+    	if(listart == true){
+    		lidist = li.getDistance();
+    		System.out.println("time: "+ time);
+        	System.out.println("LIDAR distance: "+lidist);
+        	autoChecker.sendVal(lidist);
+    	}
+    	//boolean caught;
+    	
+		
+		if(caught == false){
+			if(!autoChecker.isStable()){
+				drive(0.5);
+			}else{	
+				stop();
+				storedTime = time;
+				listart = false;
+				li.stop();
+				caught = true;
+			}
+		}else{
+			
+			if((time - storedTime) == 150){
+				closeArms();
+			}
+			if((time - storedTime) == 250){
+				elevator(1);
+				gg.reset();
+				turned = false;
+			}
+			if((time - storedTime) == 300){
+				elevator(0);
+			}
+			if((time - storedTime) >= 250 && turned == false){
+				
+				if(regDrive(90, gg.getAngle())){
+					turned = true;
+					gg.reset();
+					storedTime2 = time;
+				}
+			}
+			if(turned == true){
+				System.out.println("time2: "+storedTime2);
+			}
+			if((time - storedTime2) == 100 && turned == true){
+				drive(0.5);
+			}
+			if((time - storedTime2) == 250 && turned == true){
+				elevator(-1);
+			}
+			if((time - storedTime2) == 450 && turned == true){
+				stop();
+				openArms();
+			}
+		}
+		
+		//if(caught = true){
+			
+		//}
+		
+		//if(joy1.getRawButton(2)){
+			//System.out.println("isStable: "+autoChecker.isStable());
+		//}
+		/*
+    	switch(time){
+	    	case 0:
+	    		drive(0.5);
+	    		break;
+	    	case 400:
+	    		stop();
+	    		break;
+	    	case 100:
+	    		elevator(1);
+	    		break;
+	    	case 7000:
+	    		elevator(0);
+	    		break;
+    		default:
+    			System.out.println("SWITCH DEFAULT");
+    	}
+    	*/
+    	//if(time == 100){
+    		//System.out.println("time = 3");
+    	//}
+    	//drive(1);
+    	
+    	Timer.delay(.01);
+    }
+	boolean secondBox;
+	boolean uptosecond;
+	int times = 1;
+    public void autoOneToteContainterDrive(int time){
+    	double lidist;
+    	if(time == 0){
+    		listart = true;
+    		caught = false;
+    		storedTime = time;
+    		storedTime2 = time;
+    		turned = false;
+    		openArms();
+    		
+    		secondBox = false;
+    		uptosecond = false;
+    	}
+    	if(listart == true){
+    		lidist = li.getDistance();
+    		System.out.println("time: "+ time);
+        	System.out.println("LIDAR distance: "+lidist);
+        	autoChecker.sendVal(lidist);
+    	}
+    	//boolean caught;
+    	
+		
+		if(caught == false){
+			if(!autoChecker.isStable()/* && (time - storedTime) <= 150*/){
+				drive(0.5);
+				//drive forward
+			}else{	
+				stop();
+				storedTime = time;
+				
+				//li.stop();
+				caught = true;
+				//autoChecker.empty();
+				uptosecond = true;
+			}
+		}else{
+			int xer = 0;
+			while(Limit1.get() && uptosecond == true){
+				
+				if(xer == 80){
+					openArms();
+				}
+				elevator(-1);
+				storedTime = time;
+				xer++;
+				Timer.delay(0.01);
+			}
+			uptosecond = false;
+			if((time - storedTime) == 150){
+				closeArms();
+			}
+			if((time - storedTime) == 250){
+				//go up until hit specific point then stop
+				while(elPot.get() > .60){
+					elevator(1);
+				}
+				elevator(0);
+				//elevator(1);
+				//gg.reset();
+				turned = false;
+			}
+			if((time - storedTime) == 350){
+				elevator(0);
+				if(times ==1){
+					caught = false;
+				}
+				times++;
+				//li.start();
+			}
+			if((time - storedTime) > 400 && secondBox == false){
+				
+				/*listart = true;
+				//li.start(10);
+				if(autoChecker.full){
+					System.out.println("full");
+					if(!autoChecker.isStable()){
+						System.out.println("inside");
+						drive(0.5);
+					}else{
+						System.out.println("collected");
+						stop();
+						listart = false;
+						//li.stop();
+						uptosecond = true;
+					}
+				}
+				if(uptosecond == true){
+					openArms();
+					elevator(-1);
+					if(!Limit1.get()){
+						closeArms();
+						Timer.delay(.5);
+						elevator(1);
+						Timer.delay(.5);
+						elevator(0);
+						Timer.delay(.5);
+						secondBox = true;
+						li.stop();
+					}
+				}*/
+			}
+			//turning 90degrees
+			if((time - storedTime) >= 250 && turned == false && times == 3){
+				listart = false;
+				if(regDrive(90, gg.getAngle())){
+					turned = true;
+					gg.reset();
+					storedTime2 = time;
+				}
+			}
+			if(turned == true){
+				System.out.println("time2: "+storedTime2);
+			}
+			if((time - storedTime2) == 100 && turned == true){
+				drive(0.5);
+			}
+			if((time - storedTime2) == 250 && turned == true){
+				elevator(-1);
+			}
+			if((time - storedTime2) == 450 && turned == true){
+				stop();
+				openArms();
+			}
+		}
+		
+		//if(caught = true){
+			
+		//}
+		
+		//if(joy1.getRawButton(2)){
+			//System.out.println("isStable: "+autoChecker.isStable());
+		//}
+		/*
+    	switch(time){
+	    	case 0:
+	    		drive(0.5);
+	    		break;
+	    	case 400:
+	    		stop();
+	    		break;
+	    	case 100:
+	    		elevator(1);
+	    		break;
+	    	case 7000:
+	    		elevator(0);
+	    		break;
+    		default:
+    			System.out.println("SWITCH DEFAULT");
+    	}
+    	*/
+    	//if(time == 100){
+    		//System.out.println("time = 3");
+    	//}
+    	//drive(1);
+    	
+    	Timer.delay(.01);
+    }
+    public void autonomousInit(){
+    	li.start(10);
+    	gg.reset();
+    	frontRobot.setSafetyEnabled(false);
+    	rearRobot.setSafetyEnabled(false);
+    	AutoCounter = 0;
+    	
+    	openArms();
+    	while(!Limit1.get()){
+    		elevator(-1);
+    	}
+    	elevator(0);
+    	
+    	autoChecker = new checkSus(0, 35);
+    	
+    	double lidist;
+    	
+    	
+    	
+    	if(AutBut1.get()){
+    		while(!autoChecker.isStable()){
+    			lidist = li.getDistance();
+    			autoChecker.sendVal(lidist);
+    			drive(0.5);
+    			Timer.delay(0.01);
+    		}
+    		//Robot is holding tote
+    		stop();
+    		closeArms();
+    		Timer.delay(0.3);
+    		while(elPot.get() > .60){
+				elevator(1);
+			}
+    		elevator(0);
+    		while(gg.getAngle() > 90){
+    			regDrive(90, gg.getAngle());
+    		}
+    	}else{
+    		
+    	}
+    	
+    	
+    	
+    	
+    }
+    public void autonomousPeriodic() {
+    	/*
+    	if(AutBut1.get()){
+    		autoOneToteDrive(AutoCounter);
+    		
+    	}else if(!AutBut1.get()){
+    		autoOneToteContainterDrive(AutoCounter);
+    	}
+    	AutoCounter++;
+    	*/
+    }
+
+    /**
+     * This function is called periodically during operator control
+     */
+	
+	
+    
+    public double strafeSpeed = 0.80;
+    public double strafeslowdown = 0.75;
+    
+	public void strafeLeft(double angle){
+		double strafeSpeed = 0.80;
+    	double strafeslowdown = 0.75;
+		if(angle < -5){
+			frontRobot.tankDrive(strafeSpeed, strafeslowdown);
+    		rearRobot.tankDrive(strafeSpeed, -1*strafeslowdown);
+		}else if(angle > 5){
+			frontRobot.tankDrive(strafeslowdown, strafeSpeed);
+    		rearRobot.tankDrive(-1*strafeslowdown, strafeSpeed);
+		}else{
+    		frontRobot.tankDrive(strafeSpeed, strafeSpeed);
+    		rearRobot.tankDrive(-1*strafeSpeed, -1*strafeSpeed);
+		}
+	}
+	public void strafeRight(double angle){
+		double strafeSpeed = 0.80;
+    	double strafeslowdown = 0.75;
+		if(angle < -5){
+			frontRobot.tankDrive(strafeSpeed, -1*strafeslowdown);
+    		rearRobot.tankDrive(strafeSpeed, strafeslowdown);
+		}else if(angle > 5){
+			frontRobot.tankDrive(-1*strafeslowdown, strafeSpeed);
+    		rearRobot.tankDrive(strafeslowdown, strafeSpeed);
+		}else{
+			frontRobot.tankDrive(-1*strafeSpeed, -1*strafeSpeed);
+    		rearRobot.tankDrive(strafeSpeed, strafeSpeed);
+		}
+	}
+	checkSus checker;
+	checkSus autoChecker;
+	public void teleopInit() {
+    	checker = new checkSus();
+    	autoChecker = new checkSus(0, 25);
+    	gg.reset();
+    	frontRobot.setSafetyEnabled(true);
+    	rearRobot.setSafetyEnabled(true);
+    	negMax = 0;
+    	
+    	li.start(10);
+	}
+    double posMax = 0;
+	double negMax = 0;
+	
+	
+	public void pull(double val){
+		double neg = val * -1;
+		holder1.set(val);
+		holder2.set(neg);
+	}
+	public void openHolder(){
+		holder.set(DoubleSolenoid.Value.kForward);
+	}
+	public void closeHolder(){
+		holder.set(DoubleSolenoid.Value.kReverse);
+	}
+    @SuppressWarnings("deprecation")
+	public void teleopPeriodic() {
+    	double lidist = li.getDistance();
+		System.out.println("LIDAR distance: "+lidist);
+		autoChecker.sendVal(lidist);
+		if(joy1.getRawButton(2)){
+			System.out.println("isStable: "+autoChecker.isStable());
+		}
+		//checker.sendVal(lidist);
+    	//if(checker.full){
+    		
+    		//System.out.println("isStable: "+checker.isStable());
+    	//}
+    	
+    	gg.setSensitivity(0.007);
+    	double angle = gg.getAngle();
+    	System.out.println("angle: "+angle);
+    	double lefty = joy1.getRawAxis(1);
+    	double righty = joy1.getRawAxis(5);
+    	double leftx = joy1.getRawAxis(0);
+    	double rightx = joy1.getRawAxis(2);
+    	boolean pressing = false;
+    	
+    	double joyaxis3 = joy1.getRawAxis(3);
+    	double joyaxis4 = joy1.getRawAxis(4);
+    	joyaxis3 = (joyaxis3 / 2) + 0.5;
+    	joyaxis3 *= -1;
+    	joyaxis4 = (joyaxis4 / 2) + 0.5;
+    	
+    	double finalval = joyaxis4 - joyaxis3;
+    	
+    	double throt = joy1.getThrottle();
+    	
+    	double ACY = AC.getY();
+    	
+    	if(joy1.getRawButton(5)){
+    		strafeLeft(angle);
+    		pressing = true;
+    	}else if(joy1.getRawButton(6)){
+    		strafeRight(angle);
+    		pressing = true;
+    	}else if(joy1.getRawButton(2)){
+    		drive(1);
+    		pressing = true;
+    	}else if(joy1.getRawButton(1)){
+    		drive(-1);
+    		pressing = true;
+    	}else{
+    		frontRobot.tankDrive(-1*lefty, -1*righty);
+    		rearRobot.tankDrive(-1*lefty, -1*righty);
+    		if(pressing == false){
+    			gg.reset();
+    			pressing = false;
+    		}
+    		
+    	}
+    	
+    	double potVal = elPot.get();
+    	System.out.println("potVal: "+potVal);
+    	double elv = joy2.getRawAxis(5);
+    	elv *= -1;
+    	
+    	if(elv < -0.5){
+    		elv = -0.5;
+    	}
+    	if(joy2.getRawButton(6)){
+    		elevator(elv);
+    	}else{
+    		elevator(0);
+    	}
+    	
+    	
+    	if(joy2.getRawButton(5)){
+    		closeArms();
+    		
+    	}else{
+    		openArms();
+    	}
+    	if(joy2.getRawButton(4)){
+    		openHolder();
+    	}else{
+    		closeHolder();
+    	}
+    	
+    	
+    	if(joy2.getRawButton(7)){
+    		pull(1);
+    	}else if(joy2.getRawButton(8)){
+    		pull(-1);
+    	}else{
+    		pull(0);
+    	}
+    	
+    	/* ---
+    	for(int k=0; k < jsensors.length(); k++){
+    		
+    		JSONObject cursensor = jsensors.getJSONObject(k);
+    		switch(cursensor.getString("name")){
+    			case "Potentiometer":
+    				cursensor.put("value", elPot.get());
+    				break;
+    			case "Gyro":
+    				cursensor.put("value", angle);
+    				break;
+    			case "AccelX":
+    				cursensor.put("value", AC.getX());
+    				break;
+    			case "AccelY":
+    				cursensor.put("value", AC.getY());
+    				break;
+    		}
+    	}
+    	sensortable.putString("JtoJData", jobjs.toString());
+    	*/
+    	Timer.delay(.01);
+    }
+    
+    /**
+     * This function is called periodically during test mode
+     */
+    
+    //--static JSONObject obj = new JSONObject("{\"cool\":\"beans\"}");
+	//--static String pageName = obj.getString("cool");
+    public void testPeriodic() {
+    	//Test Motors
+    	//--System.out.println(pageName);
+    	int i=0, j=1;
+    	for(; i < joy1.getButtonCount(); i++, j++){
+    		
+    		if(joy1.getRawButton(j)){
+    			current = j;
+    			break;
+    		}
+    	}
+    	SetTest(current, current - 1);
+    	//System.out.println("Gyro: "+gg.getAngle());
+    	System.out.println("Current Directory: "+System.getProperty("user.dir"));
+		
+		File dir = new File("/usr/local/natinst/");
+		File[] filesList = dir.listFiles();
+		for (File file : filesList) {
+		    if (file.isFile()) {
+		        System.out.println("file: "+file.getName());
+		    }else if(file.isDirectory()){
+		    	System.out.println("directory: "+file.getName());
+		    }
+		}
+    	
+    	
+    }
+    
+}

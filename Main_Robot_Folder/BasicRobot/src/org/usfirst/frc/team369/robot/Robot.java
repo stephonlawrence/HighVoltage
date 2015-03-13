@@ -521,9 +521,57 @@ public class Robot extends IterativeRobot {
     	frontRobot.setSafetyEnabled(false);
     	rearRobot.setSafetyEnabled(false);
     	AutoCounter = 0;
+    	/*
+    	openHolder();
+    	openArms();
+    	while(elPot.get() > .60){
+    		elevator(1);
+    	}
+    	elevator(0);
+    	closeHolder();
+    	
     	autoChecker = new checkSus(0, 35);
+    	
+    	double lidist;
+    	
+    	
+    	
+    	if(AutBut1.get()){
+    		while(!autoChecker.isStable()){
+    			pull(1);
+    			lidist = li.getDistance();
+    			autoChecker.sendVal(lidist);
+    			drive(0.5);
+    			Timer.delay(0.01);
+    		}
+    		pull(0);
+    		//Robot is holding tote
+    		stop();
+    		openHolder();
+    		while(!Limit1.get()){
+    			elevator(-1);
+    		}
+    		closeArms();
+    		Timer.delay(0.3);
+    		while(elPot.get() > .60){
+				elevator(1);
+			}
+    		elevator(0);
+    		while(gg.getAngle() > 90){
+    			regDrive(90, gg.getAngle());
+    		}
+    		drive(0.75);
+    		Timer.delay(1.5);
+    	}else{
+    		
+    	}
+    	*/
+    	
+    	
+    	
     }
     public void autonomousPeriodic() {
+    	/*
     	if(AutBut1.get()){
     		autoOneToteDrive(AutoCounter);
     		
@@ -531,6 +579,7 @@ public class Robot extends IterativeRobot {
     		autoOneToteContainterDrive(AutoCounter);
     	}
     	AutoCounter++;
+    	*/
     }
 
     /**
@@ -574,7 +623,7 @@ public class Robot extends IterativeRobot {
 	checkSus autoChecker;
 	public void teleopInit() {
     	checker = new checkSus();
-    	autoChecker = new checkSus(0, 25);
+    	autoChecker = new checkSus(0, 35);
     	gg.reset();
     	frontRobot.setSafetyEnabled(true);
     	rearRobot.setSafetyEnabled(true);
@@ -591,7 +640,12 @@ public class Robot extends IterativeRobot {
 		holder1.set(val);
 		holder2.set(neg);
 	}
-	
+	public void closeHolder(){
+		holder.set(DoubleSolenoid.Value.kForward);
+	}
+	public void openHolder(){
+		holder.set(DoubleSolenoid.Value.kReverse);
+	}
     @SuppressWarnings("deprecation")
 	public void teleopPeriodic() {
     	double lidist = li.getDistance();
@@ -651,39 +705,40 @@ public class Robot extends IterativeRobot {
     	
     	double potVal = elPot.get();
     	System.out.println("potVal: "+potVal);
-    	double elv = joy2.getRawAxis(5);
+    	double elv = joy2.getRawAxis(1);
     	elv *= -1;
     	
     	if(elv < -0.5){
     		elv = -0.5;
     	}
-    	if(joy2.getRawButton(6)){
+    	if(joy2.getRawButton(5)){
     		elevator(elv);
     	}else{
     		elevator(0);
     	}
     	
-    	
-    	if(joy2.getRawButton(5)){
+		if(joy2.getRawButton(3)){
+			openHolder();
+		}else{
+			closeHolder();
+		}
+		if(joy2.getRawButton(7) && !autoChecker.isStable()){
+		
+			pull(1);
+    	}else if(joy2.getRawButton(8)){
+    		pull(-1);
+    	}else{
+    		pull(0);
+    	}
+		
+		
+    	if(joy2.getRawButton(6)){
     		closeArms();
     		
     	}else{
     		openArms();
     	}
-    	if(joy1.getRawButton(4)){
-    		holder.set(DoubleSolenoid.Value.kForward);
-    	}else{
-    		holder.set(DoubleSolenoid.Value.kReverse);
-    	}
     	
-    	
-    	if(joy1.getRawButton(7)){
-    		pull(1);
-    	}else if(joy1.getRawButton(8)){
-    		pull(-1);
-    	}else{
-    		pull(0);
-    	}
     	
     	/* ---
     	for(int k=0; k < jsensors.length(); k++){
